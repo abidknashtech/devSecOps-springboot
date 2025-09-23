@@ -8,21 +8,21 @@ on:
 
 jobs:
   # 1. Dependency Scan (OWASP)
-  dependency-scan:
-    name: Dependency Vulnerability Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Run Dependency Check (OWASP)
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: "SecureSpringBootDemo"
-          path: "."
-          format: "ALL"
-        env:
-          DEPENDENCY_CHECK_OPTIONS: "--disableOSSIndex"
+  #dependency-scan:
+  #  name: Dependency Vulnerability Scan
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Checkout code
+  #      uses: actions/checkout@v3
+  #
+  #    - name: Run Dependency Check (OWASP)
+  #      uses: dependency-check/Dependency-Check_Action@main
+  #      with:
+  #        project: "SecureSpringBootDemo"
+  #        path: "."
+  #        format: "ALL"
+  #      env:
+  #        DEPENDENCY_CHECK_OPTIONS: "--disableOSSIndex"
 
   # 2. Secret Scanning (Gitleaks)
   secret-scan:

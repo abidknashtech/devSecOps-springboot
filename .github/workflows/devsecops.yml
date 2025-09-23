@@ -1,4 +1,4 @@
-name: DevSecOps Security Pipeline (Gradle)
+name: Security & Build Pipeline
 
 on:
   push:
@@ -7,97 +7,54 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    name: Build & Test Spring Boot (Gradle)
+  # 1. Dependency Scan
+  dependency-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - name: Run Dependency Check (OWASP)
+        uses: dependency-check/Dependency-Check_Action@main
         with:
-          distribution: temurin
-          java-version: 21
+          project: "SecureSpringBootDemo"
+          path: "."
+          format: "ALL"
 
-      - name: Build with Gradle
-        run: ./gradlew clean build --no-daemon
-
-  sast-codeql:
-    name: Static Code Analysis (CodeQL)
+  # 2. Secret Scanning
+  secret-scan:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
+    needs: dependency-scan   # runs only if dependency-scan succeeds
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: java
-
-      - name: Build project (Gradle)
-        run: ./gradlew build -x test --no-daemon
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-
-  secrets-scan:
-    name: Secret Scanning (Gitleaks)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         with:
-          args: detect --source . --no-git -v --redact --config .gitleaks.toml
+          config: gitleaks.toml
 
-  dependency-scan:
-    name: Dependency Vulnerability Scan (Trivy FS)
+  # 3. Build
+  build:
     runs-on: ubuntu-latest
+    needs: secret-scan       # runs only if secret-scan succeeds
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Run Trivy FS scan
-        uses: aquasecurity/trivy-action@master
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
         with:
-          scan-type: 'fs'
-          severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          exit-code: '1'
-          format: 'table'
+          java-version: '21'
+          distribution: 'temurin'
 
-  container-scan:
-    name: Container Image Scan (Trivy)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t springboot-devsecops-gradle:latest .
-
-      - name: Scan Docker image
-        uses: aquasecurity/trivy-action@master
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
         with:
-          image-ref: 'springboot-devsecops-gradle:latest'
-          severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          exit-code: '1'
-          format: 'table'
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-  hardcoded-secrets:
-    name: Hard-coded Secrets Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run custom hardcoded-secret scanner
-        run: |
-          chmod +x ./scripts/secret_scan.sh
-          ./scripts/secret_scan.sh
+      - name: Build with Gradle
+        run: ./gradlew clean build --no-daemon

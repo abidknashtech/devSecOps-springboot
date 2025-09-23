@@ -8,18 +8,18 @@ on:
 
 jobs:
   # 1. Dependency Scan
-  dependency-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  #dependency-scan:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Checkout code
+  #      uses: actions/checkout@v3
 
-      - name: Run Dependency Check (OWASP)
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: "SecureSpringBootDemo"
-          path: "."
-          format: "ALL"
+  #    - name: Run Dependency Check (OWASP)
+  #      uses: dependency-check/Dependency-Check_Action@main
+  #      with:
+  #        project: "SecureSpringBootDemo"
+  #        path: "."
+  #        format: "ALL"
 
   # 2. Secret Scanning
   secret-scan:

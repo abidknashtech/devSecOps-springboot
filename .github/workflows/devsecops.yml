@@ -98,9 +98,10 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
           format: 'table'
+
   zap_scan:
     runs-on: ubuntu-latest
-    needs: docker_scan   # run only if Docker scan passed
+    needs: docker-scan   # run only if Docker scan passed
     steps:
       - name: Checkout
         uses: actions/checkout@v4

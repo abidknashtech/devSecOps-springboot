@@ -7,6 +7,27 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # 0. Dependency Scan (OWASP)
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Dependency Check (OWASP)
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "SecureSpringBootDemo"
+          path: "."
+          format: "ALL"
+        env:
+          # Disable OSS Index to avoid authentication error
+          #DEPENDENCY_CHECK_OPTIONS: "--disableOSSIndex"
+          # If you want OSS Index enabled, set these secrets:
+          OSSINDEX_USERNAME: ${{ secrets.OSS_INDEX_USERNAME }}
+          OSSINDEX_PASSWORD: ${{ secrets.OSS_INDEX_PASSWORD }}
+
   # 1. Secret Scanning (Gitleaks)
   secret-scan:
     name: Secret Scan
